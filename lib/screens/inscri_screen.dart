@@ -1,10 +1,11 @@
+import 'package:aiforgood/screens/successScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:aiforgood/components/CustomInputField.dart';
 import 'package:aiforgood/components/PasswordInputField.dart';
 import 'package:aiforgood/components/PrimaryButton.dart';
 import 'package:aiforgood/components/header.dart';
 import 'package:aiforgood/components/socialLoginButtons.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -154,24 +155,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       PrimaryButton(
                         text: 'Continuer',
                         color: const Color(0xFFF15E00),
-                        onPressed: () {
-                          final email = _emailController.text.trim();
-                          final isValidPassword = hasMinLength(password) &&
-                              hasLowercase(password) &&
-                              hasUppercase(password) &&
-                              hasDigit(password) &&
-                              hasSpecialChar(password);
+                       onPressed: () async {
+  final email = _emailController.text.trim();
+  final password = _passwordController.text;
+  final confirmPassword = _confirmPasswordController.text;
 
-                          setState(() {
-                            _showEmailError = email.isEmpty || !email.contains('@');
-                            _showPasswordError = password.isEmpty || !isValidPassword;
-                            _showConfirmError = password != confirmPassword;
-                          });
+  final isValidPassword = hasMinLength(password) &&
+      hasLowercase(password) &&
+      hasUppercase(password) &&
+      hasDigit(password) &&
+      hasSpecialChar(password);
 
-                          if (_showEmailError || _showPasswordError || _showConfirmError) return;
+  setState(() {
+    _showEmailError = email.isEmpty || !email.contains('@');
+    _showPasswordError = password.isEmpty || !isValidPassword;
+    _showConfirmError = password != confirmPassword;
+  });
 
-                          print('✅ Création de compte OK');
-                        },
+  if (_showEmailError || _showPasswordError || _showConfirmError) return;
+
+  try {
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+   Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (_) => const SuccessScreen()),
+);
+
+  } on FirebaseAuthException catch (e) {
+    String message = '';
+    if (e.code == 'weak-password') {
+      message = 'Mot de passe trop faible.';
+    } else if (e.code == 'email-already-in-use') {
+      message = 'Un compte existe déjà avec cet e-mail.';
+    } else {
+      message = 'Erreur : ${e.message}';
+    }
+
+    // Affiche un message d’erreur
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  } catch (e) {
+    print(e);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Erreur inconnue.'), backgroundColor: Colors.red),
+    );
+  }
+},
+
                       ),
                  
                       const SocialLoginButtons(
