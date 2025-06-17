@@ -3,11 +3,12 @@ import 'package:aiforgood/components/PasswordInputField.dart';
 import 'package:aiforgood/components/PrimaryButton.dart';
 import 'package:aiforgood/components/header.dart';
 import 'package:aiforgood/components/socialLoginButtons.dart';
+import 'package:aiforgood/screens/TimeBankingScreen.dart';
 import 'package:aiforgood/screens/forgot_password_screen.dart';
 import 'package:aiforgood/screens/inscri_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showError = false;
   bool _showPasswordField = false;
   bool _stayConnected = false;
-
 
   @override
   void dispose() {
@@ -45,9 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: 500, 
-                  ),
+                  constraints: const BoxConstraints(maxWidth: 500),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -81,83 +79,107 @@ class _LoginScreenState extends State<LoginScreen> {
                                   controller: _passwordController,
                                   labelText: 'Mot de passe',
                                 ),
-              
-  Padding(
-    padding: const EdgeInsets.only(top: 12.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _stayConnected = !_stayConnected;
-                });
-              },
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: _stayConnected ? const Color(0xFFF15E00) : Colors.transparent,
-                  border: Border.all(color: const Color(0xFFF15E00), width: 2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: _stayConnected
-                    ? const Icon(Icons.check, color: Colors.white, size: 18)
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text("Rester identifié"),
-          ],
-        ),
-        GestureDetector(
-          onTap: () {
-             Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-            );
-          },
-          child: Row(
-            children: const [
-              Text(
-                "Mot de passe oublié ?",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(width: 4),
-              Icon(Icons.arrow_forward, color: Color(0xFFF15E00), size: 18),
-            ],
-          ),
-        ),
-      ],
-    ),
-  ),
-
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _stayConnected = !_stayConnected;
+                                              });
+                                            },
+                                            child: Container(
+                                              width: 24,
+                                              height: 24,
+                                              decoration: BoxDecoration(
+                                                color: _stayConnected ? const Color(0xFFF15E00) : Colors.transparent,
+                                                border: Border.all(color: const Color(0xFFF15E00), width: 2),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: _stayConnected
+                                                  ? const Icon(Icons.check, color: Colors.white, size: 18)
+                                                  : null,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text("Rester identifié"),
+                                        ],
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                                          );
+                                        },
+                                        child: Row(
+                                          children: const [
+                                            Text(
+                                              "Mot de passe oublié ?",
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            SizedBox(width: 4),
+                                            Icon(Icons.arrow_forward, color: Color(0xFFF15E00), size: 18),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 30),
                         PrimaryButton(
                           text: 'Continuer',
                           color: const Color(0xFFF15E00),
-                          onPressed: () {
-                            final isValidEmail = _emailController.text.contains('@');
+                          onPressed: () async {
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text;
+
+                            final isValidEmail = email.contains('@');
 
                             setState(() {
                               _showError = !isValidEmail;
                               _showPasswordField = isValidEmail;
                             });
 
-                            if (isValidEmail) {
-                              print('Email OK – affichage du champ mot de passe');
-                            } else {
-                              print('Email invalide');
+                            if (!isValidEmail) return;
+
+                            if (_showPasswordField && password.isNotEmpty) {
+                              try {
+                                final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                  email: email,
+                                  password: password,
+                                );
+
+                         Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (_) => const TimeBankingScreen()),
+);
+
+                              } on FirebaseAuthException catch (e) {
+                                String message = '';
+                                if (e.code == 'user-not-found') {
+                                  message = "Aucun utilisateur trouvé pour cet e-mail.";
+                                } else if (e.code == 'wrong-password') {
+                                  message = "Mot de passe incorrect.";
+                                } else {
+                                  message = "Erreur : ${e.message}";
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(message),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
                             }
                           },
                         ),
@@ -177,9 +199,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       Navigator.push(
-                                              context,
-                                              MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                                            );
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                      );
                                     },
                                 ),
                               ],
