@@ -3,6 +3,7 @@ import 'package:aiforgood/components/PasswordInputField.dart';
 import 'package:aiforgood/components/PrimaryButton.dart';
 import 'package:aiforgood/components/header.dart';
 import 'package:aiforgood/components/socialLoginButtons.dart';
+import 'package:aiforgood/screens/AuthRedirectScreen.dart';
 import 'package:aiforgood/screens/TimeBankingScreen.dart';
 import 'package:aiforgood/screens/forgot_password_screen.dart';
 import 'package:aiforgood/screens/inscri_screen.dart';
@@ -111,10 +112,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       GestureDetector(
                                         onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                                          );
+                                          final email = _emailController.text.trim();
+                                          if (email.isEmpty || !email.contains('@')) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text("Veuillez entrer une adresse e-mail valide avant de continuer."),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          } else {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => ForgotPasswordScreen(email: email),
+                                              ),
+                                            );
+                                          }
                                         },
                                         child: Row(
                                           children: const [
@@ -158,11 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   password: password,
                                 );
 
-                         Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(builder: (_) => const TimeBankingScreen()),
-);
-
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const AuthRedirectScreen()),
+                                );
                               } on FirebaseAuthException catch (e) {
                                 String message = '';
                                 if (e.code == 'user-not-found') {
