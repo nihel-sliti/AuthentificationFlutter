@@ -1,3 +1,4 @@
+import 'package:aiforgood/components/custom_bottom_nav_bar.dart';
 import 'package:aiforgood/screens/UpdateProfileScreen.dart';
 import 'package:aiforgood/screens/login_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,13 @@ class _ProfileClientScreenState extends State<ProfileClientScreen> {
       _showHistorique = true;
     });
   }
+   int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +42,10 @@ class _ProfileClientScreenState extends State<ProfileClientScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
+        /*leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFFF15E00)),
           onPressed: () => Navigator.pop(context),
-        ),
+        ),*/
         title: const Text(
           'Profil',
           style: TextStyle(color: Colors.black),
@@ -221,6 +229,10 @@ class _ProfileClientScreenState extends State<ProfileClientScreen> {
             ),
           );
         },
+      ), bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+        notificationCount: 1,
       ),
     );
   }
