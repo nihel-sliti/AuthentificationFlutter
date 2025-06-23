@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:aiforgood/components/PrimaryButton.dart';
 import 'package:aiforgood/components/header.dart';
+import 'package:aiforgood/screens/login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +14,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  int _secondsRemaining = 5;
+  int _secondsRemaining = 30;
   Timer? _timer;
 
   @override
@@ -27,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: widget.email);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Lien de réinitialisation envoyé avec succès."),
+          content: Text("Lien envoyé avec succès. Vérifiez votre boîte mail."),
           backgroundColor: Colors.green,
         ),
       );
@@ -42,15 +44,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _startResendTimer() {
-    _secondsRemaining = 5;
+    _secondsRemaining = 30;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining == 0) {
         timer.cancel();
       } else {
-        setState(() {
-          _secondsRemaining--;
-        });
+        setState(() => _secondsRemaining--);
       }
     });
   }
@@ -64,57 +64,88 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 500),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
+                 IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+                const SizedBox(height: 20),
+
+                Center(
+                  child: Column(
+                    children: [
+                      SizedBox(height: screenHeight * 0.04),
+                      const Header(
+                        imagePath: 'assets/images/Logo_Orange.png',
+                        title: 'Mot de passe oublié',
+                      ),
+                    ],
+                  ),
                 ),
-                SizedBox(height: screenHeight * 0.05),
-                const Header(
-                  imagePath: 'assets/images/Logo_Orange.png',
-                  title: 'Mot de passe oublié',
-                ),
-                const SizedBox(height: 10),
+
+                const SizedBox(height: 24),
+
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(Icons.person_outline, color: Colors.orange),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Le lien de réinitialisation a été envoyé à ${_maskEmail(widget.email)}',
+                        'Un lien de réinitialisation a été envoyé à ${_maskEmail(widget.email)}.',
                         style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 8),
+                const Text(
+                  "* Vérifiez aussi votre dossier Spam si vous ne trouvez pas l'e-mail.",
+                  style: TextStyle(fontSize: 13, color: Colors.red),
+                ),
+
                 const SizedBox(height: 32),
                 if (_secondsRemaining > 0)
                   Text(
-                    'Vous pouvez renvoyer l’email dans $_secondsRemaining s',
-                    style: const TextStyle(color: Colors.green),
+                    'Vous pouvez renvoyer le lien dans $_secondsRemaining secondes.',
+                    style: const TextStyle(color: Colors.black87),
                   ),
+
+                const SizedBox(height: 20),
+
+                PrimaryButton(
+                  text: 'Renvoyer le lien',
+                  color: const Color(0xFFF15E00),
+                  onPressed: _secondsRemaining == 0 ? () => _sendResetEmail() : null,
+                ),
+
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _secondsRemaining == 0 ? _sendResetEmail : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF15E00),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.deepOrangeAccent,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
+                    child: const Text('⬅ Retour à la connexion'),
                   ),
-                  child: const Text(
-                    'Renvoyer le lien',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                )
+                ),
               ],
             ),
           ),
@@ -130,7 +161,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final domain = parts[1];
     final maskedName = name.length <= 2
         ? '${name[0]}*'
-        : '${name.substring(0, 2)}${'*' * (name.length - 2)}';
+        : name.substring(0, 2) + '*' * (name.length - 2);
     return '$maskedName@$domain';
   }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">aiforgood</string>
+    <string name="facebook_app_id">1219523433044954</string>
+    <string name="fb_login_protocol_scheme">fb1219523433044954</string>
+    <string name="facebook_client_token">fcc6abd0c0231b4012f10c6090dc29dc</string>
+
+</resources>

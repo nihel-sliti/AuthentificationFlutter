@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class PrimaryButton extends StatelessWidget {
   final String text;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const PrimaryButton({
     super.key,
@@ -14,11 +14,13 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDisabled = onPressed == null;
+
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2), // coins très légers
+          color: isDisabled ? Colors.grey : color,
+          borderRadius: BorderRadius.circular(2),
           boxShadow: const [
             BoxShadow(
               color: Colors.black26,
@@ -37,11 +39,11 @@ class PrimaryButton extends StatelessWidget {
               child: Text(
                 text,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
-                  color: Colors.white,
-                  fontFamily: 'Helvetica', // "Helvetica Neue" n’est pas dispo par défaut
-                  fontWeight: FontWeight.normal, // correspond mieux à la capture
+                  color: Colors.white.withOpacity(isDisabled ? 0.6 : 1),
+                  fontFamily: 'Helvetica',
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),

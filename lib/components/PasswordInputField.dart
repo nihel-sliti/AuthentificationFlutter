@@ -24,24 +24,34 @@ class _PasswordFieldState extends State<PasswordField> {
       obscureText: !_isPasswordVisible,
       decoration: InputDecoration(
         labelText: widget.labelText,
+        labelStyle: const TextStyle(color: Colors.grey),
         border: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.black),
         ),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.black),
         ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: const Color(0xFFF15E00),
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: const Color(0xFFF15E00),
+            ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
           ),
-          onPressed: () {
-            setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            });
-          },
         ),
       ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Ce champ est requis';
+        }
+        return null;
+      },
     );
   }
 }
